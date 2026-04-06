@@ -9,44 +9,49 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Inter',sans-serif; background:#f4f7fc; color:#0f172a; }
-        .navbar { background:white; padding:0.8rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:99; }
+        .navbar { background:white; padding:0.8rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:99; box-shadow:0 2px 8px rgba(0,0,0,0.03); }
         .logo { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#2563eb,#8b5cf6); -webkit-background-clip:text; background-clip:text; color:transparent; }
-        /* Auth section - tombol lebih kecil */
         .nav-links { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; }
-        .btn-outline { background:transparent; border:1px solid #cbd5e1; padding:0.4rem 0.9rem; border-radius:40px; font-weight:500; cursor:pointer; font-size:0.85rem; transition:0.2s; }
-        .btn-primary { background:#2563eb; color:white; border:none; padding:0.4rem 0.9rem; border-radius:40px; font-weight:500; cursor:pointer; font-size:0.85rem; transition:0.2s; }
-        .btn-primary:hover, .btn-outline:hover { transform:translateY(-1px); }
+        .btn-outline { background:transparent; border:1px solid #cbd5e1; padding:0.4rem 0.9rem; border-radius:40px; font-weight:500; cursor:pointer; font-size:0.85rem; }
+        .btn-primary { background:#2563eb; color:white; border:none; padding:0.4rem 0.9rem; border-radius:40px; font-weight:500; cursor:pointer; font-size:0.85rem; }
         .container { max-width:1280px; margin:1.5rem auto; padding:0 1.2rem; }
-        .banner-slider { position:relative; border-radius:28px; overflow:hidden; margin-bottom:2rem; box-shadow:0 8px 20px rgba(0,0,0,0.08); }
+        .fitur-tabs { display:flex; gap:1rem; justify-content:center; margin-bottom:2rem; flex-wrap:wrap; background:white; padding:0.5rem; border-radius:60px; box-shadow:0 2px 8px rgba(0,0,0,0.03); }
+        .tombol-fitur { background:transparent; border:none; padding:0.7rem 1.5rem; border-radius:50px; font-weight:600; font-size:0.95rem; cursor:pointer; display:inline-flex; align-items:center; gap:10px; color:#475569; }
+        .tombol-fitur.active { background:#2563eb; color:white; box-shadow:0 4px 12px rgba(37,99,235,0.2); }
+        .konten-fitur { display:none; background:white; border-radius:28px; padding:1.5rem; box-shadow:0 8px 20px rgba(0,0,0,0.05); animation:fadeIn 0.2s ease; }
+        .konten-fitur.active { display:block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+        .banner-slider { position:relative; border-radius:24px; overflow:hidden; margin-bottom:1.5rem; }
         .slider-container { display:flex; transition:transform 0.5s ease; }
-        .slider-container img { width:100%; max-height:320px; object-fit:cover; }
-        .prev, .next { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; padding:0.5rem 0.8rem; border-radius:50%; cursor:pointer; font-size:1rem; }
-        .section-title { font-size:1.3rem; font-weight:700; margin:1.2rem 0 0.8rem; display:flex; align-items:center; gap:8px; }
-        .product-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:1.2rem; }
+        .slider-container img { width:100%; max-height:280px; object-fit:cover; }
+        .prev, .next { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; padding:0.5rem 0.8rem; border-radius:50%; cursor:pointer; }
+        .product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.2rem; margin-top:0.5rem; }
         .product-card { background:white; border-radius:24px; overflow:hidden; cursor:pointer; transition:0.2s; border:1px solid #eef2ff; }
         .product-card:hover { transform:translateY(-4px); box-shadow:0 12px 20px rgba(0,0,0,0.08); }
-        .product-card img { width:100%; height:180px; object-fit:cover; }
+        .product-card img { width:100%; height:170px; object-fit:cover; }
         .product-info { padding:1rem; }
         .price { font-weight:800; color:#2563eb; font-size:1.1rem; }
+        .order-list { display:flex; flex-direction:column; gap:0.8rem; }
+        .order-item { background:#f8fafc; border-radius:20px; padding:1rem; border-left:4px solid #2563eb; }
         .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:1000; }
         .modal-content { background:white; max-width:480px; width:90%; border-radius:32px; padding:1.5rem; position:relative; }
         .close { position:absolute; top:12px; right:18px; font-size:24px; cursor:pointer; }
-        .btn-buy { background:#2563eb; color:white; border:none; width:100%; padding:0.7rem; border-radius:40px; font-weight:600; font-size:0.9rem; cursor:pointer; margin-top:0.8rem; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .btn-beli { background:#2563eb; color:white; border:none; width:100%; padding:0.7rem; border-radius:40px; font-weight:600; margin-top:0.8rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
         .chat-icon { position:fixed; bottom:20px; right:20px; background:#2563eb; width:50px; height:50px; border-radius:25px; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; box-shadow:0 8px 16px rgba(0,0,0,0.15); z-index:200; font-size:1.2rem; }
         .chat-panel { position:fixed; bottom:80px; right:20px; width:340px; height:480px; background:white; border-radius:28px; box-shadow:0 20px 30px rgba(0,0,0,0.2); display:none; flex-direction:column; overflow:hidden; z-index:201; }
-        .chat-header { background:#0f172a; color:white; padding:0.8rem 1rem; display:flex; justify-content:space-between; font-weight:600; font-size:0.9rem; }
+        .chat-header { background:#0f172a; color:white; padding:0.8rem 1rem; display:flex; justify-content:space-between; font-weight:600; }
         .chat-messages { flex:1; overflow-y:auto; padding:0.8rem; display:flex; flex-direction:column; gap:0.5rem; background:#f8fafc; }
         .message { max-width:80%; padding:0.5rem 0.8rem; border-radius:20px; font-size:0.8rem; }
         .message.admin { background:#2563eb; color:white; align-self:flex-start; }
         .message.me { background:#e2e8f0; align-self:flex-end; }
         .chat-input { display:flex; padding:0.6rem; gap:0.5rem; border-top:1px solid #e2e8f0; }
-        .chat-input input { flex:1; padding:0.5rem; border-radius:30px; border:1px solid #cbd5e1; font-size:0.8rem; }
-        .chat-input button { background:#2563eb; border:none; border-radius:30px; padding:0.5rem 1rem; color:white; font-size:0.8rem; cursor:pointer; }
+        .chat-input input { flex:1; padding:0.5rem; border-radius:30px; border:1px solid #cbd5e1; }
+        .chat-input button { background:#2563eb; border:none; border-radius:30px; padding:0.5rem 1rem; color:white; cursor:pointer; }
         .badge { background:#ef4444; border-radius:50%; padding:2px 6px; font-size:0.6rem; margin-left:4px; }
         .toast { position:fixed; top:20px; right:20px; background:#10b981; color:white; padding:8px 16px; border-radius:40px; font-size:0.8rem; z-index:1000; }
         .auth-form-inline { display:flex; gap:6px; flex-wrap:wrap; align-items:center; background:#f1f5f9; padding:5px 12px; border-radius:60px; }
         .auth-input { padding:6px 10px; border-radius:40px; border:1px solid #cbd5e1; font-size:0.8rem; width:120px; }
-        @media (max-width:640px) { .container { padding:0 1rem; } .chat-panel { width:90%; right:5%; } .auth-input { width:100px; } }
+        @media (max-width:640px) { .tombol-fitur { padding:0.5rem 1rem; font-size:0.8rem; } }
     </style>
 </head>
 <body>
@@ -54,17 +59,40 @@
     <div class="logo"><i class="fas fa-store"></i> TokoKu</div>
     <div class="nav-links" id="authSection"></div>
 </div>
+
 <div class="container">
-    <div class="banner-slider">
-        <button class="prev" onclick="slideBanner(-1)">❮</button>
-        <div class="slider-container" id="sliderContainer"></div>
-        <button class="next" onclick="slideBanner(1)">❯</button>
+    <div class="fitur-tabs">
+        <button class="tombol-fitur active" data-fitur="produk"><i class="fas fa-store"></i> 🛍️ Produk</button>
+        <button class="tombol-fitur" data-fitur="pesanan"><i class="fas fa-clipboard-list"></i> 📦 Pesanan Saya</button>
+        <button class="tombol-fitur" data-fitur="promo"><i class="fas fa-tags"></i> 🎁 Promo & Banner</button>
     </div>
-    <div class="section-title"><i class="fas fa-tag"></i> Produk Unggulan</div>
-    <div class="product-grid" id="productGrid"></div>
-    <div class="section-title" style="margin-top:2rem;"><i class="fas fa-clipboard-list"></i> Pesanan Saya</div>
-    <div id="orderList" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+
+    <div id="fitur-produk" class="konten-fitur active">
+        <div class="banner-slider">
+            <button class="prev" onclick="slideBanner(-1)">❮</button>
+            <div class="slider-container" id="sliderContainer"></div>
+            <button class="next" onclick="slideBanner(1)">❯</button>
+        </div>
+        <h3 style="margin-bottom:0.8rem;"><i class="fas fa-tag"></i> Semua Produk</h3>
+        <div id="productGrid" class="product-grid"></div>
+    </div>
+
+    <div id="fitur-pesanan" class="konten-fitur">
+        <h3><i class="fas fa-history"></i> Riwayat Pesanan Saya</h3>
+        <div id="orderList" class="order-list" style="margin-top:1rem;"></div>
+    </div>
+
+    <div id="fitur-promo" class="konten-fitur">
+        <h3><i class="fas fa-images"></i> Banner Promo (Geser)</h3>
+        <div class="banner-slider" style="margin-bottom:1rem;">
+            <button class="prev" onclick="slideBannerPromo(-1)">❮</button>
+            <div class="slider-container" id="promoSliderContainer"></div>
+            <button class="next" onclick="slideBannerPromo(1)">❯</button>
+        </div>
+        <p style="color:#475569; text-align:center;">Nikmati promo menarik dengan menggeser banner di atas!</p>
+    </div>
 </div>
+
 <div id="productModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
@@ -78,10 +106,11 @@
             <input type="number" id="orderQty" min="1" value="1" style="width:70px; padding:6px; border-radius:30px;">
             <label style="margin-left:0.8rem;">Alamat:</label>
             <input type="text" id="orderAddress" placeholder="Alamat lengkap" style="margin-top:6px; width:100%; padding:8px; border-radius:30px; border:1px solid #cbd5e1;">
-            <button class="btn-buy" onclick="placeOrder()"><i class="fas fa-shopping-cart"></i> Beli Sekarang</button>
+            <button class="btn-beli" onclick="placeOrder()"><i class="fas fa-shopping-cart"></i> Beli Sekarang</button>
         </div>
     </div>
 </div>
+
 <div class="chat-icon" onclick="toggleChat()">
     <i class="fas fa-comment-dots"></i><span id="chatNotifBadge" class="badge" style="display:none;">!</span>
 </div>
@@ -95,6 +124,7 @@
 </div>
 
 <script>
+    // Inisialisasi storage (sama dengan admin)
     if (!localStorage.getItem('products')) localStorage.setItem('products', JSON.stringify([]));
     if (!localStorage.getItem('banners')) localStorage.setItem('banners', JSON.stringify([]));
     if (!localStorage.getItem('orders')) localStorage.setItem('orders', JSON.stringify([]));
@@ -102,7 +132,8 @@
     if (!localStorage.getItem('chatRooms')) localStorage.setItem('chatRooms', JSON.stringify([]));
     if (!localStorage.getItem('messages')) localStorage.setItem('messages', JSON.stringify([]));
 
-    let currentBuyer = null, currentChatRoomId = null, banners = [], bannerIndex = 0;
+    let currentBuyer = null, currentChatRoomId = null;
+    let banners = [], bannerIndex = 0, promoBannerIndex = 0;
 
     function showToast(msg) { const t=document.createElement('div'); t.className='toast'; t.innerHTML=`<i class="fas fa-info-circle"></i> ${msg}`; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
 
@@ -166,7 +197,7 @@
     function loadProducts() {
         const products = JSON.parse(localStorage.getItem('products'));
         const container = document.getElementById('productGrid');
-        if (products.length === 0) { container.innerHTML = '<p style="text-align:center;">Belum ada produk</p>'; return; }
+        if (products.length === 0) { container.innerHTML = '<p style="text-align:center; padding:2rem;">Belum ada produk.</p>'; return; }
         container.innerHTML = products.map(p => `
             <div class="product-card" onclick="showDetail(${p.id})">
                 <img src="${p.imageUrl}"><div class="product-info"><h3>${p.name}</h3><p>${p.description.substring(0,50)}</p><div class="price">Rp${p.price.toLocaleString()}</div></div>
@@ -177,14 +208,20 @@
 
     function loadBanners() {
         banners = JSON.parse(localStorage.getItem('banners'));
-        const slider = document.getElementById('sliderContainer');
-        if (banners.length === 0) { slider.innerHTML = '<div style="width:100%; text-align:center; padding:60px;">Tidak ada banner</div>'; return; }
-        slider.innerHTML = banners.map(b => `<img src="${b.imageUrl}">`).join('');
+        const slider1 = document.getElementById('sliderContainer');
+        if (banners.length === 0) { slider1.innerHTML = '<div style="width:100%; text-align:center; padding:60px;">Tidak ada banner</div>'; return; }
+        slider1.innerHTML = banners.map(b => `<img src="${b.imageUrl}">`).join('');
         updateSlider();
         if(banners.length) setInterval(() => slideBanner(1), 5000);
+
+        const slider2 = document.getElementById('promoSliderContainer');
+        if (slider2) { slider2.innerHTML = banners.map(b => `<img src="${b.imageUrl}">`).join(''); updatePromoSlider(); }
     }
+
     function updateSlider() { document.getElementById('sliderContainer').style.transform = `translateX(-${bannerIndex * 100}%)`; }
     function slideBanner(dir) { if(banners.length){ bannerIndex = (bannerIndex + dir + banners.length) % banners.length; updateSlider(); } }
+    function updatePromoSlider() { const slider = document.getElementById('promoSliderContainer'); if(slider) slider.style.transform = `translateX(-${promoBannerIndex * 100}%)`; }
+    function slideBannerPromo(dir) { if(banners.length){ promoBannerIndex = (promoBannerIndex + dir + banners.length) % banners.length; updatePromoSlider(); } }
 
     function showDetail(id) {
         const product = window.productsData.find(p => p.id == id);
@@ -211,19 +248,24 @@
         showToast('Pesanan berhasil!');
         closeModal();
         loadMyOrders();
+        document.querySelector('.tombol-fitur[data-fitur="pesanan"]').click();
     }
 
     function loadMyOrders() {
         if (!currentBuyer) return;
         const orders = JSON.parse(localStorage.getItem('orders'));
         const products = JSON.parse(localStorage.getItem('products'));
-        const myOrders = orders.filter(o => o.buyerId == currentBuyer.id);
+        const myOrders = orders.filter(o => o.buyerId == currentBuyer.id).sort((a,b)=>b.createdAt - a.createdAt);
         const enriched = myOrders.map(o => ({ ...o, product: products.find(p => p.id == o.productId) }));
-        if (enriched.length === 0) { document.getElementById('orderList').innerHTML = '<div style="background:white; border-radius:20px; padding:0.8rem; text-align:center;">Belum ada pesanan</div>'; return; }
-        document.getElementById('orderList').innerHTML = enriched.map(o => `
-            <div style="background:white; border-radius:20px; padding:0.8rem;">
-                <div><strong>${o.product?.name}</strong> x${o.quantity} - Rp${o.totalPrice.toLocaleString()}</div>
-                <div>Status: ${o.status === 'pending' ? '⏳ Diproses' : '✅ Selesai'}</div>
+        const container = document.getElementById('orderList');
+        if (enriched.length === 0) { container.innerHTML = '<div class="order-item" style="text-align:center;">Belum ada pesanan</div>'; return; }
+        container.innerHTML = enriched.map(o => `
+            <div class="order-item">
+                <div><strong>${o.product?.name || 'Produk tidak tersedia'}</strong> x${o.quantity}</div>
+                <div>Total: Rp${o.totalPrice.toLocaleString()}</div>
+                <div>Alamat: ${o.address}</div>
+                <div>Status: ${o.status === 'pending' ? '<span style="color:#eab308;">⏳ Diproses</span>' : '<span style="color:#10b981;">✅ Selesai</span>'}</div>
+                <div style="font-size:0.7rem; color:#64748b;">${new Date(o.createdAt).toLocaleString()}</div>
             </div>
         `).join('');
     }
@@ -285,6 +327,19 @@
         panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
         if (panel.style.display === 'flex') { document.getElementById('chatNotifBadge').style.display = 'none'; if (currentChatRoomId) loadMessages(currentChatRoomId); }
     }
+
+    document.querySelectorAll('.tombol-fitur').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const fitur = btn.dataset.fitur;
+            document.querySelectorAll('.konten-fitur').forEach(k => k.classList.remove('active'));
+            document.getElementById(`fitur-${fitur}`).classList.add('active');
+            document.querySelectorAll('.tombol-fitur').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (fitur === 'pesanan') loadMyOrders();
+            if (fitur === 'produk') { loadProducts(); loadBanners(); }
+            if (fitur === 'promo') loadBanners();
+        });
+    });
 
     renderAuth();
     setInterval(() => { if(currentBuyer) loadMyOrders(); }, 10000);

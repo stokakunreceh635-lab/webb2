@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TokoKu - Belanja Asyik (Cloud)</title>
+    <title>TokoKu - Belanja (Cloud)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -22,6 +22,9 @@
         .main-content { display:none; }
         .navbar { background:white; padding:0.8rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
         .logo { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#2563eb,#8b5cf6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+        .status { font-size:0.7rem; padding:4px 8px; border-radius:20px; background:#e2e8f0; }
+        .status.online { background:#10b981; color:white; }
+        .status.offline { background:#ef4444; color:white; }
         .logout-btn { background:#ef4444; border:none; padding:0.4rem 0.8rem; border-radius:40px; color:white; cursor:pointer; font-size:0.8rem; }
         .container { max-width:1280px; margin:1.5rem auto; padding:0 1.2rem; }
         .fitur-tabs { display:flex; gap:0.8rem; justify-content:center; margin-bottom:1.5rem; flex-wrap:wrap; background:white; padding:0.4rem; border-radius:50px; }
@@ -57,6 +60,7 @@
         .chat-input button { background:#2563eb; border:none; border-radius:30px; padding:0.4rem 0.8rem; color:white; cursor:pointer; }
         .badge { background:#ef4444; border-radius:50%; padding:2px 5px; font-size:0.6rem; margin-left:4px; }
         .toast { position:fixed; top:20px; right:20px; background:#10b981; color:white; padding:6px 12px; border-radius:40px; font-size:0.75rem; z-index:1000; }
+        .refresh-btn { background:#64748b; border:none; padding:0.3rem 0.7rem; border-radius:20px; color:white; cursor:pointer; font-size:0.7rem; margin-left:8px; }
         @media (max-width:640px) { .tombol-fitur { padding:0.4rem 0.8rem; font-size:0.75rem; } }
     </style>
 </head>
@@ -83,8 +87,11 @@
 
     <div id="mainContent" class="main-content">
         <div class="navbar">
-            <div class="logo"><i class="fas fa-store"></i> TokoKu (Cloud)</div>
-            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <div class="logo"><i class="fas fa-store"></i> TokoKu <span id="connectionStatus" class="status">Mengecek...</span></div>
+            <div>
+                <button class="refresh-btn" onclick="manualRefresh()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
         </div>
         <div class="container">
             <div class="fitur-tabs">
@@ -97,16 +104,17 @@
                     <div class="slider-container" id="sliderContainer"></div>
                     <button class="next" onclick="slideBanner(1)">❯</button>
                 </div>
-                <h3>Semua Produk</h3>
+                <h3>Semua Produk <span id="productCount"></span></h3>
                 <div id="productGrid" class="product-grid"></div>
             </div>
             <div id="fitur-pesanan" class="konten-fitur">
                 <h3>Riwayat Pesanan Saya</h3>
-                <div id="orderList" class="order-list" style="margin-top:1rem;"></div>
+                <div id="orderList" class="order-list"></div>
             </div>
         </div>
     </div>
 
+    <!-- Modal, Chat, dll sama seperti sebelumnya -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -138,7 +146,7 @@
     </div>
 
     <script>
-        // Firebase Config (sama dengan admin)
+        // ========== FIREBASE CONFIG (HARUS SAMA DENGAN ADMIN) ==========
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
@@ -147,30 +155,61 @@
             messagingSenderId: "YOUR_SENDER_ID",
             appId: "YOUR_APP_ID"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        const productsRef = db.collection('products');
-        const bannersRef = db.collection('banners');
-        const ordersRef = db.collection('orders');
-        const usersRef = db.collection('users');
-        const chatRoomsRef = db.collection('chatRooms');
-        const messagesRef = db.collection('messages');
-
+        
+        let db;
+        let productsRef, bannersRef, ordersRef, usersRef, chatRoomsRef, messagesRef;
         let currentBuyer = null;
         let currentChatRoomId = null;
         let banners = [], bannerIndex = 0;
         let unsubscribeMessages = null;
-
-        function showToast(msg) {
+        
+        function initFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                productsRef = db.collection('products');
+                bannersRef = db.collection('banners');
+                ordersRef = db.collection('orders');
+                usersRef = db.collection('users');
+                chatRoomsRef = db.collection('chatRooms');
+                messagesRef = db.collection('messages');
+                
+                db.collection('products').limit(1).get()
+                    .then(() => {
+                        document.getElementById('connectionStatus').innerText = 'Online';
+                        document.getElementById('connectionStatus').className = 'status online';
+                        showToast('Terhubung ke Firebase Cloud');
+                    })
+                    .catch(err => {
+                        document.getElementById('connectionStatus').innerText = 'Offline';
+                        document.getElementById('connectionStatus').className = 'status offline';
+                        console.error('Firebase connection error:', err);
+                        showToast('Gagal terhubung ke Firebase!', true);
+                    });
+            } catch(e) {
+                console.error('Firebase init error:', e);
+                alert('Error Firebase: ' + e.message);
+            }
+        }
+        initFirebase();
+        
+        function showToast(msg, isError = false) {
             const t = document.createElement('div');
             t.className = 'toast';
             t.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+            t.style.background = isError ? '#dc2626' : '#10b981';
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 3000);
         }
-
-        // Toggle form
+        
+        window.manualRefresh = function() {
+            loadProducts();
+            loadBanners();
+            loadMyOrders();
+            showToast('Data dimuat ulang');
+        };
+        
+        // Toggle form login/daftar
         let isLogin = true;
         document.getElementById('toggleText').addEventListener('click', () => {
             isLogin = !isLogin;
@@ -190,7 +229,7 @@
                 toggle.innerText = 'Sudah punya akun? Login di sini';
             }
         });
-
+        
         async function doLogin() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPass').value;
@@ -204,7 +243,7 @@
             showToast('Login berhasil!');
             loadMainApp(user);
         }
-
+        
         async function doRegister() {
             const name = document.getElementById('regName').value;
             const email = document.getElementById('regEmail').value;
@@ -225,7 +264,7 @@
             showToast('Pendaftaran berhasil!');
             loadMainApp(user);
         }
-
+        
         function loadMainApp(buyer) {
             currentBuyer = buyer;
             document.getElementById('loginPage').style.display = 'none';
@@ -234,13 +273,13 @@
             loadBanners();
             loadMyOrders();
             loadChatRoom();
-
+            
             // Real-time listeners
             productsRef.onSnapshot(() => loadProducts());
             bannersRef.onSnapshot(() => loadBanners());
             ordersRef.onSnapshot(() => loadMyOrders());
             chatRoomsRef.onSnapshot(() => loadChatRoom());
-
+            
             // Fitur tabs
             document.querySelectorAll('.tombol-fitur').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -254,22 +293,23 @@
                 });
             });
         }
-
+        
         const savedBuyer = localStorage.getItem('currentBuyer');
         if (savedBuyer) {
             loadMainApp(JSON.parse(savedBuyer));
         }
-
+        
         function logout() {
             localStorage.removeItem('currentBuyer');
             location.reload();
         }
-
+        
         async function loadProducts() {
             const snapshot = await productsRef.orderBy('createdAt', 'desc').get();
             const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            document.getElementById('productCount').innerText = `(${products.length})`;
             const container = document.getElementById('productGrid');
-            if (products.length === 0) { container.innerHTML = '<p style="text-align:center;">Belum ada produk.</p>'; return; }
+            if (products.length === 0) { container.innerHTML = '<p style="text-align:center;">Belum ada produk. Admin akan segera menambah.</p>'; return; }
             container.innerHTML = products.map(p => `
                 <div class="product-card" onclick="showDetail('${p.id}')">
                     <img src="${p.imageUrl}"><div class="product-info"><h3>${p.name}</h3><p>${p.description.substring(0,40)}</p><div class="price">Rp${p.price.toLocaleString()}</div></div>
@@ -277,7 +317,7 @@
             `).join('');
             window.productsData = products;
         }
-
+        
         async function loadBanners() {
             const snapshot = await bannersRef.orderBy('createdAt', 'desc').get();
             banners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -289,7 +329,7 @@
         }
         function updateSlider() { document.getElementById('sliderContainer').style.transform = `translateX(-${bannerIndex * 100}%)`; }
         function slideBanner(dir) { if(banners.length){ bannerIndex = (bannerIndex + dir + banners.length) % banners.length; updateSlider(); } }
-
+        
         function showDetail(id) {
             const product = window.productsData.find(p => p.id == id);
             if(!product) return;
@@ -302,7 +342,7 @@
             document.getElementById('productModal').style.display = 'flex';
         }
         function closeModal() { document.getElementById('productModal').style.display = 'none'; }
-
+        
         async function placeOrder() {
             if (!currentBuyer) return;
             const qty = parseInt(document.getElementById('orderQty').value);
@@ -323,7 +363,7 @@
             loadMyOrders();
             document.querySelector('.tombol-fitur[data-fitur="pesanan"]').click();
         }
-
+        
         async function loadMyOrders() {
             if (!currentBuyer) return;
             const ordersSnapshot = await ordersRef.where('buyerId', '==', currentBuyer.id).get();
@@ -335,15 +375,14 @@
             if (enriched.length === 0) { container.innerHTML = '<div class="order-item" style="text-align:center;">Belum ada pesanan</div>'; return; }
             container.innerHTML = enriched.map(o => `
                 <div class="order-item">
-                    <div><strong>${o.product?.name || 'Produk tidak tersedia'}</strong> x${o.quantity}</div>
+                    <div><strong>${o.product?.name || 'Produk?'}</strong> x${o.quantity}</div>
                     <div>Total: Rp${o.totalPrice.toLocaleString()}</div>
                     <div>Alamat: ${o.address}</div>
                     <div>Status: ${o.status === 'pending' ? '⏳ Diproses' : '✅ Selesai'}</div>
                 </div>
             `).join('');
         }
-
-        // Chat
+        
         async function loadChatRoom() {
             if (!currentBuyer) return;
             const snapshot = await chatRoomsRef.where('buyerId', '==', currentBuyer.id).get();
@@ -355,7 +394,7 @@
             const badge = document.getElementById('chatNotifBadge');
             badge.style.display = !unreadSnapshot.empty ? 'inline' : 'none';
         }
-
+        
         function loadMessages(roomId) {
             if (unsubscribeMessages) unsubscribeMessages();
             const q = messagesRef.where('roomId', '==', roomId).orderBy('timestamp', 'asc');
@@ -371,7 +410,6 @@
                     container.appendChild(div);
                 });
                 container.scrollTop = container.scrollHeight;
-                // Mark as read
                 snapshot.forEach(async doc => {
                     if (doc.data().senderId !== currentBuyer.id && !doc.data().read) {
                         await messagesRef.doc(doc.id).update({ read: true });
@@ -379,7 +417,7 @@
                 });
             });
         }
-
+        
         async function sendChatMessage() {
             if (!currentBuyer) return;
             if (!currentChatRoomId) {
@@ -406,7 +444,7 @@
             });
             input.value = '';
         }
-
+        
         function toggleChat() {
             const panel = document.getElementById('chatPanel');
             panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
@@ -414,7 +452,7 @@
                 loadMessages(currentChatRoomId);
             }
         }
-
+        
         window.slideBanner = slideBanner;
         window.showDetail = showDetail;
         window.closeModal = closeModal;

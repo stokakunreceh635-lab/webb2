@@ -3,396 +3,433 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TokoKu - Belanja Asyik</title>
+    <title>Admin Panel - TokoKu (Cloud)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Inter',sans-serif; background:#f4f7fc; color:#0f172a; }
-        /* Halaman Login/Daftar Pembeli - Terpisah */
-        .login-page { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
-        .login-box { background:white; padding:2rem; border-radius:40px; width:100%; max-width:380px; text-align:center; box-shadow:0 25px 45px rgba(0,0,0,0.2); }
-        .login-box i { font-size:2.5rem; color:#2563eb; margin-bottom:0.5rem; }
-        .login-box h2 { margin-bottom:1.2rem; font-size:1.5rem; }
-        .login-box input { width:100%; padding:0.7rem 1rem; border-radius:40px; border:1px solid #e2e8f0; margin-bottom:0.8rem; font-size:0.9rem; }
-        .login-box button { background:#2563eb; color:white; border:none; width:100%; padding:0.7rem; border-radius:40px; font-weight:600; cursor:pointer; margin-top:0.3rem; }
-        .toggle-auth { margin-top:1rem; font-size:0.85rem; color:#2563eb; cursor:pointer; }
-        .error-msg { color:#dc2626; font-size:0.75rem; margin-top:0.3rem; }
-        /* Konten Utama (setelah login) */
-        .main-content { display:none; }
-        .navbar { background:white; padding:0.8rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:99; }
-        .logo { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#2563eb,#8b5cf6); -webkit-background-clip:text; background-clip:text; color:transparent; }
-        .logout-btn { background:#ef4444; border:none; padding:0.4rem 0.8rem; border-radius:40px; color:white; cursor:pointer; font-size:0.8rem; }
-        .container { max-width:1280px; margin:1.5rem auto; padding:0 1.2rem; }
-        .fitur-tabs { display:flex; gap:0.8rem; justify-content:center; margin-bottom:1.5rem; flex-wrap:wrap; background:white; padding:0.4rem; border-radius:50px; }
-        .tombol-fitur { background:transparent; border:none; padding:0.5rem 1.2rem; border-radius:40px; font-weight:600; font-size:0.85rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px; color:#475569; }
-        .tombol-fitur.active { background:#2563eb; color:white; }
-        .konten-fitur { display:none; background:white; border-radius:24px; padding:1.2rem; box-shadow:0 8px 20px rgba(0,0,0,0.05); }
-        .konten-fitur.active { display:block; }
-        .banner-slider { position:relative; border-radius:20px; overflow:hidden; margin-bottom:1.2rem; }
-        .slider-container { display:flex; transition:transform 0.5s ease; }
-        .slider-container img { width:100%; max-height:250px; object-fit:cover; }
-        .prev, .next { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; padding:0.4rem 0.7rem; border-radius:50%; cursor:pointer; font-size:0.9rem; }
-        .product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; margin-top:0.5rem; }
-        .product-card { background:white; border-radius:20px; overflow:hidden; cursor:pointer; transition:0.2s; border:1px solid #eef2ff; }
-        .product-card:hover { transform:translateY(-3px); box-shadow:0 8px 16px rgba(0,0,0,0.08); }
+        body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#f5f7fe 0%,#e9eef5 100%); min-height:100vh; }
+        .login-container { display:flex; justify-content:center; align-items:center; min-height:100vh; }
+        .login-card { background:white; padding:1.5rem; border-radius:32px; box-shadow:0 20px 35px -12px rgba(0,0,0,0.15); width:100%; max-width:320px; text-align:center; }
+        .login-card i { font-size:2rem; color:#2563eb; margin-bottom:0.5rem; }
+        .login-card h2 { font-size:1.3rem; margin-bottom:1rem; }
+        .login-card input { width:100%; padding:0.6rem 1rem; border-radius:40px; border:1px solid #e2e8f0; margin-bottom:0.8rem; font-size:0.85rem; }
+        .login-card button { background:#2563eb; color:white; border:none; width:auto; min-width:120px; padding:0.5rem 1.2rem; border-radius:40px; font-weight:600; cursor:pointer; font-size:0.85rem; }
+        .admin-panel { display:none; }
+        .navbar { background:rgba(255,255,255,0.9); backdrop-filter:blur(12px); padding:0.8rem 2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+        .logo { font-size:1.4rem; font-weight:700; background:linear-gradient(135deg,#2563eb,#7c3aed); -webkit-background-clip:text; background-clip:text; color:transparent; }
+        .logout-btn { background:#ef4444; border:none; padding:0.4rem 0.8rem; border-radius:40px; color:white; cursor:pointer; font-size:0.75rem; display:inline-flex; align-items:center; gap:5px; }
+        .container { max-width:1400px; margin:1.5rem auto; padding:0 1.5rem; }
+        .tabs { display:flex; gap:0.8rem; margin-bottom:1.5rem; flex-wrap:wrap; justify-content:center; background:rgba(255,255,255,0.6); padding:0.4rem; border-radius:50px; }
+        .tab-btn { background:transparent; border:none; padding:0.5rem 1.2rem; border-radius:40px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:0.85rem; }
+        .tab-btn.active { background:white; color:#2563eb; box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+        .tab-content { display:none; background:white; border-radius:28px; padding:1.2rem; box-shadow:0 10px 25px -8px rgba(0,0,0,0.05); }
+        .tab-content.active { display:block; }
+        .form-card { background:#f8fafc; border-radius:20px; padding:1rem; margin-bottom:1.2rem; }
+        .form-group { margin-bottom:0.8rem; }
+        label { font-weight:600; display:block; margin-bottom:0.3rem; font-size:0.85rem; }
+        input, textarea { width:100%; padding:0.6rem 0.8rem; border:1px solid #e2e8f0; border-radius:16px; font-size:0.85rem; }
+        .btn-primary { background:#2563eb; color:white; border:none; padding:0.5rem 1.2rem; border-radius:40px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; }
+        .btn-danger { background:#ef4444; color:white; border:none; padding:0.3rem 0.8rem; border-radius:40px; cursor:pointer; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
+        .btn-success { background:#10b981; color:white; border:none; padding:0.4rem 0.8rem; border-radius:40px; cursor:pointer; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
+        .btn-chat { background:#3b82f6; color:white; border:none; padding:0.4rem 0.8rem; border-radius:40px; cursor:pointer; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1rem; margin-top:1rem; }
+        .product-card, .banner-card, .order-card { background:white; border-radius:18px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05); position:relative; }
         .product-card img { width:100%; height:150px; object-fit:cover; }
         .product-info { padding:0.8rem; }
-        .price { font-weight:800; color:#2563eb; font-size:1rem; }
-        .order-list { display:flex; flex-direction:column; gap:0.8rem; }
-        .order-item { background:#f8fafc; border-radius:18px; padding:0.8rem; border-left:3px solid #2563eb; }
-        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:1000; }
-        .modal-content { background:white; max-width:450px; width:90%; border-radius:28px; padding:1.2rem; position:relative; }
-        .close { position:absolute; top:10px; right:15px; font-size:22px; cursor:pointer; }
-        .btn-beli { background:#2563eb; color:white; border:none; width:100%; padding:0.6rem; border-radius:40px; font-weight:600; margin-top:0.8rem; cursor:pointer; }
-        .chat-icon { position:fixed; bottom:20px; right:20px; background:#2563eb; width:48px; height:48px; border-radius:24px; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; box-shadow:0 8px 16px rgba(0,0,0,0.15); z-index:200; font-size:1.2rem; }
-        .chat-panel { position:fixed; bottom:80px; right:20px; width:320px; height:460px; background:white; border-radius:24px; box-shadow:0 20px 30px rgba(0,0,0,0.2); display:none; flex-direction:column; overflow:hidden; z-index:201; }
-        .chat-header { background:#0f172a; color:white; padding:0.7rem 1rem; display:flex; justify-content:space-between; font-weight:600; font-size:0.9rem; }
-        .chat-messages { flex:1; overflow-y:auto; padding:0.7rem; display:flex; flex-direction:column; gap:0.4rem; background:#f8fafc; }
-        .message { max-width:80%; padding:0.4rem 0.7rem; border-radius:18px; font-size:0.75rem; }
-        .message.admin { background:#2563eb; color:white; align-self:flex-start; }
-        .message.me { background:#e2e8f0; align-self:flex-end; }
-        .chat-input { display:flex; padding:0.5rem; gap:0.4rem; border-top:1px solid #e2e8f0; }
+        .delete-btn { position:absolute; top:8px; right:8px; background:rgba(239,68,68,0.9); border:none; border-radius:30px; padding:4px 8px; color:white; cursor:pointer; font-size:0.7rem; }
+        .chat-area { display:flex; gap:1rem; flex-wrap:wrap; }
+        .rooms-list { flex:1.2; min-width:180px; background:#f8fafc; border-radius:18px; padding:0.5rem; max-height:450px; overflow-y:auto; }
+        .chat-window { flex:3; background:#fff; border-radius:18px; display:flex; flex-direction:column; height:450px; }
+        .room-item { padding:0.7rem; border-radius:14px; margin-bottom:0.4rem; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:0.85rem; }
+        .room-item.active { background:#dbeafe; }
+        .messages { flex:1; overflow-y:auto; padding:0.8rem; display:flex; flex-direction:column; gap:0.5rem; }
+        .message { max-width:75%; padding:0.4rem 0.8rem; border-radius:18px; font-size:0.8rem; }
+        .message.admin { background:#2563eb; color:white; align-self:flex-end; }
+        .message.buyer { background:#f1f5f9; align-self:flex-start; }
+        .chat-input { display:flex; gap:0.5rem; padding:0.6rem; border-top:1px solid #eef2ff; }
         .chat-input input { flex:1; padding:0.5rem; border-radius:30px; border:1px solid #cbd5e1; font-size:0.8rem; }
-        .chat-input button { background:#2563eb; border:none; border-radius:30px; padding:0.4rem 0.8rem; color:white; cursor:pointer; font-size:0.75rem; }
-        .badge { background:#ef4444; border-radius:50%; padding:2px 5px; font-size:0.6rem; margin-left:4px; }
-        .toast { position:fixed; top:20px; right:20px; background:#10b981; color:white; padding:6px 12px; border-radius:40px; font-size:0.75rem; z-index:1000; }
-        @media (max-width:640px) { .tombol-fitur { padding:0.4rem 0.8rem; font-size:0.75rem; } }
+        .badge { background:#ef4444; color:white; border-radius:50px; padding:2px 5px; font-size:0.65rem; }
+        .toast { position:fixed; bottom:20px; right:20px; background:#1e293b; color:white; padding:8px 16px; border-radius:40px; font-size:0.8rem; z-index:1000; }
+        @media (max-width:768px) { .container { padding:0 1rem; } .tab-btn { padding:0.4rem 0.8rem; } }
     </style>
 </head>
 <body>
-    <!-- Halaman Login/Daftar Pembeli (terpisah) -->
-    <div id="loginPage" class="login-page">
-        <div class="login-box">
-            <i class="fas fa-user-circle"></i>
-            <h2 id="formTitle">Login Pembeli</h2>
-            <div id="loginForm">
-                <input type="email" id="loginEmail" placeholder="Email">
-                <input type="password" id="loginPass" placeholder="Password">
-                <button onclick="doLogin()">Login</button>
-            </div>
-            <div id="registerForm" style="display:none;">
-                <input type="text" id="regName" placeholder="Nama Lengkap">
-                <input type="email" id="regEmail" placeholder="Email">
-                <input type="password" id="regPass" placeholder="Password">
-                <button onclick="doRegister()">Daftar</button>
-            </div>
-            <div id="authError" class="error-msg"></div>
-            <div class="toggle-auth" id="toggleText">Belum punya akun? Daftar di sini</div>
+    <div id="adminLoginContainer" class="login-container">
+        <div class="login-card">
+            <i class="fas fa-user-shield"></i>
+            <h2>Admin Login</h2>
+            <input type="password" id="adminPassword" placeholder="Password admin">
+            <button onclick="adminLogin()"><i class="fas fa-key"></i> Login</button>
+            <div id="loginError" class="error-msg"></div>
+            <p style="margin-top:0.5rem; font-size:0.7rem;">Password: <strong>admin1</strong></p>
         </div>
     </div>
 
-    <!-- Konten Utama Setelah Login -->
-    <div id="mainContent" class="main-content">
+    <div id="adminPanel" class="admin-panel">
         <div class="navbar">
-            <div class="logo"><i class="fas fa-store"></i> TokoKu</div>
-            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <div class="logo"><i class="fas fa-store"></i> AdminPanel (Cloud)</div>
+            <button class="logout-btn" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
         <div class="container">
-            <div class="fitur-tabs">
-                <button class="tombol-fitur active" data-fitur="produk"><i class="fas fa-store"></i> Produk</button>
-                <button class="tombol-fitur" data-fitur="pesanan"><i class="fas fa-clipboard-list"></i> Pesanan Saya</button>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="products"><i class="fas fa-box"></i> Produk</button>
+                <button class="tab-btn" data-tab="banners"><i class="fas fa-images"></i> Banner</button>
+                <button class="tab-btn" data-tab="orders"><i class="fas fa-truck"></i> Pesanan</button>
+                <button class="tab-btn" data-tab="chat"><i class="fas fa-comment-dots"></i> Chat</button>
             </div>
-            <div id="fitur-produk" class="konten-fitur active">
-                <!-- Banner slider di dalam fitur produk -->
-                <div class="banner-slider">
-                    <button class="prev" onclick="slideBanner(-1)">❮</button>
-                    <div class="slider-container" id="sliderContainer"></div>
-                    <button class="next" onclick="slideBanner(1)">❯</button>
+            <div id="products" class="tab-content active">
+                <div class="form-card">
+                    <h3 style="font-size:1.1rem;">Tambah Produk</h3>
+                    <form id="productForm">
+                        <div class="form-group"><label>Nama Produk</label><input type="text" id="prodName" required></div>
+                        <div class="form-group"><label>Foto</label><input type="file" id="prodImage" accept="image/*" required></div>
+                        <div class="form-group"><label>Deskripsi</label><textarea id="prodDesc" rows="2"></textarea></div>
+                        <div class="form-group"><label>Jenis</label><input type="text" id="prodType"></div>
+                        <div class="form-group"><label>Harga (Rp)</label><input type="number" id="prodPrice"></div>
+                        <button type="submit" class="btn-primary"><i class="fas fa-upload"></i> Upload</button>
+                    </form>
                 </div>
-                <h3 style="margin-bottom:0.5rem;">Semua Produk</h3>
-                <div id="productGrid" class="product-grid"></div>
+                <h3 style="font-size:1rem;">Daftar Produk</h3>
+                <div id="productList" class="grid"></div>
             </div>
-            <div id="fitur-pesanan" class="konten-fitur">
-                <h3>Riwayat Pesanan Saya</h3>
-                <div id="orderList" class="order-list" style="margin-top:1rem;"></div>
+            <div id="banners" class="tab-content">
+                <div class="form-card">
+                    <h3 style="font-size:1.1rem;">Upload Banner (19:6)</h3>
+                    <form id="bannerForm">
+                        <div class="form-group"><label>Gambar</label><input type="file" id="bannerImage" accept="image/*" required></div>
+                        <button type="submit" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Upload</button>
+                    </form>
+                </div>
+                <h3 style="font-size:1rem;">Banner Aktif</h3>
+                <div id="bannerList" class="grid"></div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Detail Produk -->
-    <div id="productModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3 id="modalName"></h3>
-            <img id="modalImage" style="width:100%; border-radius:16px; margin:0.5rem 0;">
-            <p id="modalDesc" style="font-size:0.8rem;"></p>
-            <p><strong>Jenis:</strong> <span id="modalType"></span></p>
-            <p><strong>Harga:</strong> <span id="modalPrice" class="price"></span></p>
-            <div>
-                <label>Jumlah:</label>
-                <input type="number" id="orderQty" min="1" value="1" style="width:70px; padding:5px; border-radius:30px;">
-                <label style="margin-left:0.5rem;">Alamat:</label>
-                <input type="text" id="orderAddress" placeholder="Alamat lengkap" style="margin-top:5px; width:100%; padding:6px; border-radius:30px; border:1px solid #cbd5e1;">
-                <button class="btn-beli" onclick="placeOrder()"><i class="fas fa-shopping-cart"></i> Beli Sekarang</button>
+            <div id="orders" class="tab-content">
+                <h3 style="font-size:1rem;">Pesanan Pending</h3>
+                <div id="pendingOrders" class="grid"></div>
+                <h3 style="margin-top:1.2rem; font-size:1rem;">Pesanan Selesai</h3>
+                <div id="completedOrders" class="grid"></div>
             </div>
-        </div>
-    </div>
-
-    <!-- Chat -->
-    <div class="chat-icon" onclick="toggleChat()">
-        <i class="fas fa-comment-dots"></i><span id="chatNotifBadge" class="badge" style="display:none;">!</span>
-    </div>
-    <div id="chatPanel" class="chat-panel">
-        <div class="chat-header"><span><i class="fas fa-headset"></i> Chat Admin</span><span onclick="toggleChat()" style="cursor:pointer">✖</span></div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input">
-            <input type="text" id="chatInput" placeholder="Tulis pesan...">
-            <button onclick="sendChatMessage()">Kirim</button>
+            <div id="chat" class="tab-content">
+                <h3 style="font-size:1rem;">Chat dengan Pembeli</h3>
+                <div class="chat-area">
+                    <div class="rooms-list" id="roomsList">Memuat...</div>
+                    <div class="chat-window">
+                        <div id="chatMessages" class="messages"></div>
+                        <div class="chat-input">
+                            <input type="text" id="messageInput" placeholder="Pesan...">
+                            <input type="file" id="chatFile" accept="image/*,video/*" style="display:none">
+                            <button onclick="document.getElementById('chatFile').click()" class="btn-primary" style="background:#64748b; padding:0.4rem 0.8rem;"><i class="fas fa-paperclip"></i></button>
+                            <button id="sendMsgBtn" class="btn-primary"><i class="fas fa-paper-plane"></i> Kirim</button>
+                        </div>
+                        <div id="filePreview" style="font-size:10px; padding:0 0.8rem 0.5rem;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Inisialisasi storage
-        if (!localStorage.getItem('products')) localStorage.setItem('products', JSON.stringify([]));
-        if (!localStorage.getItem('banners')) localStorage.setItem('banners', JSON.stringify([]));
-        if (!localStorage.getItem('orders')) localStorage.setItem('orders', JSON.stringify([]));
-        if (!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify([]));
-        if (!localStorage.getItem('chatRooms')) localStorage.setItem('chatRooms', JSON.stringify([]));
-        if (!localStorage.getItem('messages')) localStorage.setItem('messages', JSON.stringify([]));
+        // ==================== KONFIGURASI FIREBASE ====================
+        // GANTI DENGAN DATA DARI PROJECT FIREBASE ANDA!
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-        let currentBuyer = null;
-        let currentChatRoomId = null;
-        let banners = [], bannerIndex = 0;
+        // Collections
+        const productsRef = db.collection('products');
+        const bannersRef = db.collection('banners');
+        const ordersRef = db.collection('orders');
+        const usersRef = db.collection('users');
+        const chatRoomsRef = db.collection('chatRooms');
+        const messagesRef = db.collection('messages');
 
-        // Toggle form login/daftar
-        let isLogin = true;
-        document.getElementById('toggleText').addEventListener('click', () => {
-            isLogin = !isLogin;
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            const title = document.getElementById('formTitle');
-            const toggle = document.getElementById('toggleText');
-            if (isLogin) {
-                loginForm.style.display = 'block';
-                registerForm.style.display = 'none';
-                title.innerText = 'Login Pembeli';
-                toggle.innerText = 'Belum punya akun? Daftar di sini';
-            } else {
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'block';
-                title.innerText = 'Daftar Pembeli';
-                toggle.innerText = 'Sudah punya akun? Login di sini';
-            }
-        });
+        let currentRoomId = null;
+        let unsubscribeMessages = null;
 
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
+        function showToast(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-bell'}"></i> ${msg}`;
+            toast.style.background = isError ? '#dc2626' : '#1e293b';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
 
-        function doLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPass').value;
-            const users = JSON.parse(localStorage.getItem('users'));
-            const user = users.find(u => u.email === email && u.password === password);
-            if (!user) {
-                document.getElementById('authError').innerText = 'Email atau password salah';
+        // ADMIN LOGIN (password admin1)
+        function adminLogin() {
+            const pwd = document.getElementById('adminPassword').value;
+            if (pwd !== 'admin1') {
+                document.getElementById('loginError').innerText = 'Password salah!';
                 return;
             }
-            localStorage.setItem('currentBuyer', JSON.stringify(user));
-            showToast('Login berhasil!');
-            loadMainApp(user);
+            localStorage.setItem('adminLoggedIn', 'true');
+            document.getElementById('adminLoginContainer').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            initAdminApp();
         }
 
-        function doRegister() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPass').value;
-            if (!name || !email || !password) {
-                document.getElementById('authError').innerText = 'Isi semua field';
-                return;
-            }
-            let users = JSON.parse(localStorage.getItem('users'));
-            if (users.find(u => u.email === email)) {
-                document.getElementById('authError').innerText = 'Email sudah terdaftar';
-                return;
-            }
-            const newUser = { id: Date.now(), name, email, password, role: 'buyer' };
-            users.push(newUser);
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('currentBuyer', JSON.stringify(newUser));
-            showToast('Pendaftaran berhasil!');
-            loadMainApp(newUser);
+        function adminLogout() {
+            localStorage.removeItem('adminLoggedIn');
+            location.reload();
         }
 
-        function loadMainApp(buyer) {
-            currentBuyer = buyer;
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
+        if (localStorage.getItem('adminLoggedIn') === 'true') {
+            document.getElementById('adminLoginContainer').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            initAdminApp();
+        }
+
+        // ========== FUNGSI CRUD ==========
+        async function loadProducts() {
+            const snapshot = await productsRef.orderBy('createdAt', 'desc').get();
+            const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            document.getElementById('productList').innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.imageUrl}">
+                    <div class="product-info">
+                        <h4 style="font-size:0.95rem;">${p.name}</h4>
+                        <p style="font-size:0.75rem;">${p.description.substring(0,50)}</p>
+                        <strong>${p.type}</strong> | Rp${p.price.toLocaleString()}
+                    </div>
+                    <button class="delete-btn" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i> Hapus</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteProduct(id) {
+            await productsRef.doc(id).delete();
+            showToast('Produk dihapus');
             loadProducts();
+        }
+
+        async function loadBanners() {
+            const snapshot = await bannersRef.orderBy('createdAt', 'desc').get();
+            const banners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            document.getElementById('bannerList').innerHTML = banners.map(b => `
+                <div class="banner-card" style="position:relative;">
+                    <img src="${b.imageUrl}" style="width:100%; height:120px; object-fit:cover;">
+                    <button class="delete-btn" onclick="deleteBanner('${b.id}')"><i class="fas fa-trash"></i> Hapus</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteBanner(id) {
+            await bannersRef.doc(id).delete();
+            showToast('Banner dihapus');
             loadBanners();
-            loadMyOrders();
-            loadChatRoom();
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'products') loadProducts();
-                if (e.key === 'banners') loadBanners();
-                if (e.key === 'orders') loadMyOrders();
-                if (e.key === 'messages' || e.key === 'chatRooms') { loadChatRoom(); if (currentChatRoomId) loadMessages(currentChatRoomId); }
-            });
-            // Event untuk tombol fitur
-            document.querySelectorAll('.tombol-fitur').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const fitur = btn.dataset.fitur;
-                    document.querySelectorAll('.konten-fitur').forEach(k => k.classList.remove('active'));
-                    document.getElementById(`fitur-${fitur}`).classList.add('active');
-                    document.querySelectorAll('.tombol-fitur').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    if (fitur === 'pesanan') loadMyOrders();
-                    if (fitur === 'produk') { loadProducts(); loadBanners(); }
+        }
+
+        async function loadOrders() {
+            const ordersSnapshot = await ordersRef.get();
+            const productsSnapshot = await productsRef.get();
+            const usersSnapshot = await usersRef.get();
+            const products = productsSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const users = usersSnapshot.docs.map(u => ({ id: u.id, ...u.data() }));
+            const orders = ordersSnapshot.docs.map(o => ({ id: o.id, ...o.data() }));
+            const enriched = orders.map(o => ({
+                ...o,
+                product: products.find(p => p.id == o.productId),
+                buyer: users.find(u => u.id == o.buyerId) || { name: 'Pembeli', id: o.buyerId }
+            }));
+            const pending = enriched.filter(o => o.status === 'pending');
+            const completed = enriched.filter(o => o.status === 'completed');
+            document.getElementById('pendingOrders').innerHTML = pending.map(order => `
+                <div class="order-card" style="padding:0.8rem;">
+                    <p><strong>${order.product?.name}</strong> (x${order.quantity})</p>
+                    <p>${order.buyer?.name} - Rp${order.totalPrice.toLocaleString()}</p>
+                    <p>Alamat: ${order.address}</p>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <button class="btn-success" onclick="completeOrder('${order.id}')"><i class="fas fa-check"></i> Selesai</button>
+                        <button class="btn-chat" onclick="startChatWithBuyer('${order.buyerId}', '${order.buyer?.name}')"><i class="fas fa-comment"></i> Chat</button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('completedOrders').innerHTML = completed.map(order => `<div class="order-card" style="padding:0.8rem; background:#f0fdf4;"><i class="fas fa-check-circle"></i> Pesanan #${order.id} - ${order.product?.name} Selesai</div>`).join('');
+        }
+
+        async function completeOrder(orderId) {
+            await ordersRef.doc(orderId).update({ status: 'completed' });
+            showToast('Pesanan selesai');
+            loadOrders();
+        }
+
+        // CHAT
+        async function loadChatRooms() {
+            const snapshot = await chatRoomsRef.get();
+            const rooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const messagesSnapshot = await messagesRef.get();
+            const messages = messagesSnapshot.docs.map(m => ({ id: m.id, ...m.data() }));
+            const roomsDiv = document.getElementById('roomsList');
+            if (!roomsDiv) return;
+            roomsDiv.innerHTML = rooms.map(room => {
+                const unread = messages.filter(m => m.roomId == room.id && m.senderId !== 'admin' && !m.read).length;
+                return `<div class="room-item" data-roomid="${room.id}"><i class="fas fa-user-circle"></i> ${room.buyerName} ${unread ? `<span class="badge">${unread}</span>` : ''}</div>`;
+            }).join('');
+            document.querySelectorAll('.room-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    currentRoomId = el.dataset.roomid;
+                    document.querySelectorAll('.room-item').forEach(r => r.classList.remove('active'));
+                    el.classList.add('active');
+                    markMessagesAsRead(currentRoomId);
+                    loadMessages(currentRoomId);
                 });
             });
         }
 
-        // Cek apakah sudah login sebelumnya
-        const savedBuyer = localStorage.getItem('currentBuyer');
-        if (savedBuyer) {
-            loadMainApp(JSON.parse(savedBuyer));
-        }
-
-        function logout() {
-            localStorage.removeItem('currentBuyer');
-            location.reload();
-        }
-
-        function loadProducts() {
-            const products = JSON.parse(localStorage.getItem('products'));
-            const container = document.getElementById('productGrid');
-            if (products.length === 0) { container.innerHTML = '<p style="text-align:center;">Belum ada produk.</p>'; return; }
-            container.innerHTML = products.map(p => `
-                <div class="product-card" onclick="showDetail(${p.id})">
-                    <img src="${p.imageUrl}"><div class="product-info"><h3 style="font-size:0.9rem;">${p.name}</h3><p style="font-size:0.7rem;">${p.description.substring(0,40)}</p><div class="price">Rp${p.price.toLocaleString()}</div></div>
-                </div>
-            `).join('');
-            window.productsData = products;
-        }
-
-        function loadBanners() {
-            banners = JSON.parse(localStorage.getItem('banners'));
-            const slider = document.getElementById('sliderContainer');
-            if (banners.length === 0) { slider.innerHTML = '<div style="width:100%; text-align:center; padding:40px;">Tidak ada banner</div>'; return; }
-            slider.innerHTML = banners.map(b => `<img src="${b.imageUrl}">`).join('');
-            updateSlider();
-            if(banners.length) setInterval(() => slideBanner(1), 5000);
-        }
-        function updateSlider() { document.getElementById('sliderContainer').style.transform = `translateX(-${bannerIndex * 100}%)`; }
-        function slideBanner(dir) { if(banners.length){ bannerIndex = (bannerIndex + dir + banners.length) % banners.length; updateSlider(); } }
-
-        function showDetail(id) {
-            const product = window.productsData.find(p => p.id == id);
-            if(!product) return;
-            window.currentProduct = product;
-            document.getElementById('modalName').innerText = product.name;
-            document.getElementById('modalImage').src = product.imageUrl;
-            document.getElementById('modalDesc').innerText = product.description;
-            document.getElementById('modalType').innerText = product.type;
-            document.getElementById('modalPrice').innerHTML = `Rp${product.price.toLocaleString()}`;
-            document.getElementById('productModal').style.display = 'flex';
-        }
-        function closeModal() { document.getElementById('productModal').style.display = 'none'; }
-
-        function placeOrder() {
-            if (!currentBuyer) return;
-            const qty = parseInt(document.getElementById('orderQty').value);
-            const address = document.getElementById('orderAddress').value;
-            if(!address) return showToast('Alamat wajib diisi');
-            const total = window.currentProduct.price * qty;
-            const orders = JSON.parse(localStorage.getItem('orders'));
-            orders.push({ id: Date.now(), buyerId: currentBuyer.id, productId: window.currentProduct.id, quantity: qty, totalPrice: total, address, status: 'pending', createdAt: Date.now() });
-            localStorage.setItem('orders', JSON.stringify(orders));
-            showToast('Pesanan berhasil!');
-            closeModal();
-            loadMyOrders();
-            document.querySelector('.tombol-fitur[data-fitur="pesanan"]').click();
-        }
-
-        function loadMyOrders() {
-            if (!currentBuyer) return;
-            const orders = JSON.parse(localStorage.getItem('orders'));
-            const products = JSON.parse(localStorage.getItem('products'));
-            const myOrders = orders.filter(o => o.buyerId == currentBuyer.id).sort((a,b)=>b.createdAt - a.createdAt);
-            const enriched = myOrders.map(o => ({ ...o, product: products.find(p => p.id == o.productId) }));
-            const container = document.getElementById('orderList');
-            if (enriched.length === 0) { container.innerHTML = '<div class="order-item" style="text-align:center;">Belum ada pesanan</div>'; return; }
-            container.innerHTML = enriched.map(o => `
-                <div class="order-item">
-                    <div><strong>${o.product?.name || 'Produk tidak tersedia'}</strong> x${o.quantity}</div>
-                    <div>Total: Rp${o.totalPrice.toLocaleString()}</div>
-                    <div>Alamat: ${o.address}</div>
-                    <div>Status: ${o.status === 'pending' ? '<span style="color:#eab308;">⏳ Diproses</span>' : '<span style="color:#10b981;">✅ Selesai</span>'}</div>
-                </div>
-            `).join('');
-        }
-
-        // Chat functions
-        function loadChatRoom() {
-            if (!currentBuyer) return;
-            const rooms = JSON.parse(localStorage.getItem('chatRooms'));
-            const myRoom = rooms.find(r => r.buyerId == currentBuyer.id);
-            if (myRoom && !currentChatRoomId) { currentChatRoomId = myRoom.id; loadMessages(currentChatRoomId); }
-            const messages = JSON.parse(localStorage.getItem('messages'));
-            const unread = messages.filter(m => m.roomId == currentChatRoomId && m.senderId !== currentBuyer.id && !m.read).length;
-            const badge = document.getElementById('chatNotifBadge');
-            badge.style.display = unread > 0 ? 'inline' : 'none';
-        }
-
-        function loadMessages(roomId) {
-            const messages = JSON.parse(localStorage.getItem('messages'));
-            const roomMessages = messages.filter(m => m.roomId == roomId).sort((a,b) => a.timestamp - b.timestamp);
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
-            roomMessages.forEach(msg => {
-                const isMe = msg.senderId == currentBuyer.id;
-                const div = document.createElement('div');
-                div.className = `message ${isMe ? 'me' : 'admin'}`;
-                div.innerHTML = msg.content || (msg.fileUrl ? `<a href="${msg.fileUrl}" target="_blank">📎 Lampiran</a>` : '');
-                container.appendChild(div);
+        async function markMessagesAsRead(roomId) {
+            const snapshot = await messagesRef.where('roomId', '==', roomId).where('senderId', '!=', 'admin').where('read', '==', false).get();
+            snapshot.forEach(async doc => {
+                await messagesRef.doc(doc.id).update({ read: true });
             });
-            container.scrollTop = container.scrollHeight;
-            let msgs = JSON.parse(localStorage.getItem('messages'));
-            msgs = msgs.map(m => m.roomId == roomId && m.senderId !== currentBuyer.id ? { ...m, read: true } : m);
-            localStorage.setItem('messages', JSON.stringify(msgs));
         }
 
-        function sendChatMessage() {
-            if (!currentBuyer) return;
-            if (!currentChatRoomId) {
-                let rooms = JSON.parse(localStorage.getItem('chatRooms'));
-                let room = rooms.find(r => r.buyerId == currentBuyer.id);
-                if (!room) {
-                    room = { id: Date.now(), buyerId: currentBuyer.id, adminId: 'admin', buyerName: currentBuyer.name, createdAt: Date.now() };
-                    rooms.push(room);
-                    localStorage.setItem('chatRooms', JSON.stringify(rooms));
-                }
-                currentChatRoomId = room.id;
+        async function loadMessages(roomId) {
+            if (unsubscribeMessages) unsubscribeMessages();
+            const q = messagesRef.where('roomId', '==', roomId).orderBy('timestamp', 'asc');
+            unsubscribeMessages = q.onSnapshot(snapshot => {
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const isAdmin = msg.senderId === 'admin';
+                    const div = document.createElement('div');
+                    div.className = `message ${isAdmin ? 'admin' : 'buyer'}`;
+                    let content = '';
+                    if (msg.content) content += `<i class="fas ${isAdmin ? 'fa-user-shield' : 'fa-user'}"></i> ${msg.content}`;
+                    if (msg.fileUrl) content += `<br><a href="${msg.fileUrl}" target="_blank">📎 File</a>`;
+                    div.innerHTML = content;
+                    container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        async function startChatWithBuyer(buyerId, buyerName) {
+            let roomId = null;
+            const snapshot = await chatRoomsRef.where('buyerId', '==', buyerId).where('adminId', '==', 'admin').get();
+            if (!snapshot.empty) {
+                roomId = snapshot.docs[0].id;
+            } else {
+                const newRoom = { buyerId, adminId: 'admin', buyerName, createdAt: Date.now() };
+                const docRef = await chatRoomsRef.add(newRoom);
+                roomId = docRef.id;
             }
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            const messages = JSON.parse(localStorage.getItem('messages'));
-            messages.push({ id: Date.now(), roomId: currentChatRoomId, senderId: currentBuyer.id, senderName: currentBuyer.name, content: text, fileUrl: null, timestamp: Date.now(), read: false });
-            localStorage.setItem('messages', JSON.stringify(messages));
-            input.value = '';
-            loadMessages(currentChatRoomId);
-            window.dispatchEvent(new StorageEvent('storage', { key: 'messages' }));
+            currentRoomId = roomId;
+            loadChatRooms();
+            loadMessages(currentRoomId);
+            document.querySelector('[data-tab="chat"]').click();
+            setTimeout(() => {
+                const active = document.querySelector(`.room-item[data-roomid="${currentRoomId}"]`);
+                if(active) active.classList.add('active');
+            }, 200);
         }
 
-        function toggleChat() {
-            const panel = document.getElementById('chatPanel');
-            panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
-            if (panel.style.display === 'flex') { document.getElementById('chatNotifBadge').style.display = 'none'; if (currentChatRoomId) loadMessages(currentChatRoomId); }
+        async function sendMessage() {
+            if (!currentRoomId) return showToast('Pilih ruang chat', true);
+            const msgInput = document.getElementById('messageInput');
+            const text = msgInput.value.trim();
+            const fileInput = document.getElementById('chatFile');
+            let fileUrl = null;
+            if (fileInput.files.length) {
+                const file = fileInput.files[0];
+                fileUrl = await new Promise(resolve => { const r = new FileReader(); r.onload = e => resolve(e.target.result); r.readAsDataURL(file); });
+            }
+            if (!text && !fileUrl) return;
+            await messagesRef.add({
+                roomId: currentRoomId,
+                senderId: 'admin',
+                senderName: 'Admin',
+                content: text,
+                fileUrl,
+                timestamp: Date.now(),
+                read: false
+            });
+            msgInput.value = '';
+            fileInput.value = '';
+            document.getElementById('filePreview').innerHTML = '';
         }
 
-        window.slideBanner = slideBanner;
-        window.showDetail = showDetail;
-        window.closeModal = closeModal;
-        window.placeOrder = placeOrder;
-        window.sendChatMessage = sendChatMessage;
-        window.toggleChat = toggleChat;
-        window.logout = logout;
+        // Inisialisasi Admin App
+        function initAdminApp() {
+            loadProducts();
+            loadBanners();
+            loadOrders();
+            loadChatRooms();
+
+            // Real-time listener untuk orders
+            ordersRef.onSnapshot(() => loadOrders());
+            productsRef.onSnapshot(() => loadProducts());
+            bannersRef.onSnapshot(() => loadBanners());
+            chatRoomsRef.onSnapshot(() => loadChatRooms());
+
+            document.getElementById('productForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('prodName').value;
+                const desc = document.getElementById('prodDesc').value;
+                const type = document.getElementById('prodType').value;
+                const price = parseInt(document.getElementById('prodPrice').value);
+                const file = document.getElementById('prodImage').files[0];
+                if (!file) return showToast('Pilih foto', true);
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    await productsRef.add({
+                        name, description: desc, type, price,
+                        imageUrl: ev.target.result,
+                        createdAt: Date.now()
+                    });
+                    showToast('Produk ditambahkan');
+                    document.getElementById('productForm').reset();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('bannerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const file = document.getElementById('bannerImage').files[0];
+                if (!file) return showToast('Pilih banner', true);
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    await bannersRef.add({ imageUrl: ev.target.result, createdAt: Date.now() });
+                    showToast('Banner terupload');
+                    document.getElementById('bannerForm').reset();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('sendMsgBtn').addEventListener('click', sendMessage);
+            document.getElementById('chatFile').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                document.getElementById('filePreview').innerHTML = file ? `<i class="fas fa-file"></i> ${file.name}` : '';
+            });
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (tabId === 'chat') { loadChatRooms(); if(currentRoomId) loadMessages(currentRoomId); }
+                    if (tabId === 'orders') loadOrders();
+                });
+            });
+        }
+
+        window.completeOrder = completeOrder;
+        window.deleteProduct = deleteProduct;
+        window.deleteBanner = deleteBanner;
+        window.startChatWithBuyer = startChatWithBuyer;
     </script>
 </body>
 </html>
